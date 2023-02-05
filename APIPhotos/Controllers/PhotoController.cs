@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using static System.Net.Mime.MediaTypeNames;
+using System.Net.NetworkInformation;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -8,36 +10,60 @@ namespace APIPhotos.Controllers
     [ApiController]
     public class PhotoController : ControllerBase
     {
-        // GET: api/<PhotoController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+
+        //[HttpGet("{nroTramite}")]
+        [HttpGet("tramite/{ntramite}")]
+        public IActionResult Get(string ntramite)
         {
-            return new string[] { "value1", "value2" };
+            try
+            {
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "Images", ntramite + ".png");
+                var image = System.IO.File.OpenRead(path);
+                return File(image, "image/png");
+            }
+            catch (Exception)
+            {
+                return NotFound($"No existe foto para el tramite: {ntramite}.");
+            }
         }
 
-        // GET api/<PhotoController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
 
-        // POST api/<PhotoController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> PostImage([FromForm] Photo photo)
         {
+            if (photo.Imagen == null || photo.Imagen.Length == 0)
+            {
+                return BadRequest("No se ha enviado una imagen válida");
+            }
+
+            var extension = Path.GetExtension(photo.Imagen.FileName);
+
+
+            var filename = $"{photo.Tramite}{extension}";
+
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Images", filename);
+
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await photo.Imagen.CopyToAsync(stream);
+            }
+
+            return Ok($"Imagen [{filename}] guardada correctamente");
         }
 
-        // PUT api/<PhotoController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpDelete]
+        public void Delete()
         {
-        }
+            string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Images");
 
-        // DELETE api/<PhotoController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            DirectoryInfo directory = new DirectoryInfo(folderPath);
+            FileInfo[] files = directory.GetFiles();
+
+            // Eliminar cada archivo
+            foreach (FileInfo file in files)
+            {
+                file.Delete();
+            }
         }
     }
 }
