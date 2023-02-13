@@ -28,27 +28,72 @@ namespace APIPhotos.Controllers
         }
 
 
+        //[HttpPost]
+        //public async Task<IActionResult> PostImage([FromForm] Photo photo)
+        //{
+        //    if (photo.Imagen == null || photo.Imagen.Length == 0)
+        //    {
+        //        return BadRequest("No se ha enviado una imagen válida");
+        //    }
+
+        //    var extension = Path.GetExtension(photo.Imagen.FileName);
+
+
+        //    var filename = $"{photo.Tramite}{extension}";
+
+        //    var path = Path.Combine(Directory.GetCurrentDirectory(), "Images", filename);
+
+        //    using (var stream = new FileStream(path, FileMode.Create))
+        //    {
+        //        await photo.Imagen.CopyToAsync(stream);
+        //    }
+
+        //    return Ok($"Imagen [{filename}] guardada correctamente");
+        //}
+
+        //[HttpPost]
+        //public IActionResult Post()
+        //{
+        //    var file = Request.Form.Files[0];
+        //    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "photos", file.FileName);
+
+        //    using (var stream = new FileStream(filePath, FileMode.Create))
+        //    {
+        //        file.CopyTo(stream);
+        //    }
+
+        //    return Ok();
+        //}
+
         [HttpPost]
-        public async Task<IActionResult> PostImage([FromForm] Photo photo)
+        public IActionResult Post([FromForm] string image)
         {
-            if (photo.Imagen == null || photo.Imagen.Length == 0)
+            // Decodificar la imagen de la URL
+            var imageBytes = Convert.FromBase64String(image.Split(',')[1]);
+
+            // Guardar la imagen en un archivo
+            //var filePathDelete = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "photos", "image.jpg");
+
+            string directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "photos");
+
+            string fileName = "image.jpg";
+
+            string filePathDelete = Path.Combine(directoryPath, fileName);
+
+            if (System.IO.File.Exists(filePathDelete))
             {
-                return BadRequest("No se ha enviado una imagen válida");
+                System.IO.File.Delete(filePathDelete);
             }
 
-            var extension = Path.GetExtension(photo.Imagen.FileName);
-
-
-            var filename = $"{photo.Tramite}{extension}";
-
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Images", filename);
-
-            using (var stream = new FileStream(path, FileMode.Create))
+            try
             {
-                await photo.Imagen.CopyToAsync(stream);
+                System.IO.File.WriteAllBytes(filePathDelete, imageBytes);
             }
-
-            return Ok($"Imagen [{filename}] guardada correctamente");
+            catch (Exception ex)
+            {
+                return Conflict(ex.Message);
+            }
+            return Ok();
         }
 
         [HttpDelete]

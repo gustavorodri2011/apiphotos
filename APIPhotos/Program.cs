@@ -7,6 +7,18 @@ builder.Services.AddControllers();
 //builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "corsphotos",
+                      builder =>
+                      {
+                          builder
+                            .WithOrigins("*") // specifying the allowed origin
+                            .AllowAnyMethod() // defining the allowed HTTP method
+                            .AllowAnyHeader(); // allowing any header to be sent
+                      });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -15,6 +27,8 @@ var app = builder.Build();
 //    app.UseSwagger();
 //    app.UseSwaggerUI();
 //}
+
+app.UseCors("corsphotos");
 
 app.UseHttpsRedirection();
 
